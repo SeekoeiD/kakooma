@@ -25,13 +25,31 @@ public class PuzzleGeneratorTest {
     private static void check(Puzzle p) {
         Difficulty d = p.difficulty;
         assertEquals(d.groups, p.outer.size());
-        checkGroup(p.center, d.groups, p);
+        boolean finalExpected = p.mode.op == null || PuzzleGenerator.hasFinal(p.mode.op, d);
+        assertEquals(finalExpected, p.hasFinal());
+        if (p.hasFinal()) checkGroup(p.center, d.groups, p);
         for (int i = 0; i < p.outer.size(); i++) {
             Group g = p.outer.get(i);
             checkGroup(g, d.groupSize, p);
-            assertEquals(p.center.numbers[i], g.target);
+            if (p.hasFinal()) assertEquals(p.center.numbers[i], g.target);
             if (p.mode.op != null) assertEquals(p.mode.op, g.op);
         }
+    }
+
+    @Test
+    public void beginnerKeepsNumbersSmall() {
+        PuzzleGenerator gen = new PuzzleGenerator(new Random(7));
+        for (Mode mode : Mode.values()) {
+            for (int i = 0; i < 500; i++) {
+                Puzzle p = gen.generate(mode, Difficulty.BEGINNER);
+                for (Group g : p.outer) {
+                    int limit = g.op.product ? Difficulty.BEGINNER.productMax : Difficulty.BEGINNER.sumMax;
+                    for (int n : g.numbers) assertTrue(mode + " " + n, n <= limit);
+                }
+            }
+        }
+        assertTrue(PuzzleGenerator.hasFinal(Op.ADD, Difficulty.BEGINNER));
+        assertTrue(!PuzzleGenerator.hasFinal(Op.MUL, Difficulty.BEGINNER));
     }
 
     private static void checkGroup(Group g, int size, Puzzle p) {

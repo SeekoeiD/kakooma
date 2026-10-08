@@ -24,6 +24,9 @@ public final class PuzzleGenerator {
 
     private Puzzle tryGenerate(Mode mode, Difficulty d) {
         Op centerOp = mode.op != null ? mode.op : Op.values()[random.nextInt(4)];
+        if (mode.op == null && !hasFinal(centerOp, d)) centerOp = random.nextBoolean() ? Op.ADD : Op.SUB;
+        if (!hasFinal(centerOp, d)) return withoutFinal(mode, d);
+
         Group center = makeGroup(centerOp, d.groups, d, null);
         if (center == null) return null;
 
@@ -35,6 +38,37 @@ public final class PuzzleGenerator {
             outer.add(g);
         }
         return new Puzzle(mode, d, outer, center);
+    }
+
+    /** Single-operation puzzle with independent flowers and no final group. */
+    private Puzzle withoutFinal(Mode mode, Difficulty d) {
+        List<Integer> pool = mode.op.product ? productPool(d) : sumPool(d);
+        List<Integer> targets = new ArrayList<>();
+        while (targets.size() < d.groups) {
+            int t = pool.get(random.nextInt(pool.size()));
+            // Prefer different special numbers in each flower when the pool allows it.
+            if (!targets.contains(t) || pool.size() < d.groups) targets.add(t);
+        }
+        List<Group> outer = new ArrayList<>();
+        for (int t : targets) {
+            Group g = makeGroup(mode.op, d.groupSize, d, t);
+            if (g == null) return null;
+            outer.add(g);
+        }
+        return new Puzzle(mode, d, outer, null);
+    }
+
+    /** True if a final group can be built for this operation at this level. */
+    public static boolean hasFinal(Op op, Difficulty d) {
+        if (!op.product) return d.sumMax >= 7;  // smallest final group: 3 + 4 = 7
+        List<Integer> pool = productPool(d);
+        for (int i = 0; i < pool.size(); i++) {
+            for (int j = i + 1; j < pool.size(); j++) {
+                int p = pool.get(i) * pool.get(j);
+                if (p <= d.productMax && pool.contains(p)) return true;
+            }
+        }
+        return false;
     }
 
     private Op pickMixedOp(int value, Difficulty d) {
@@ -131,7 +165,7 @@ public final class PuzzleGenerator {
         }
         // Mix small factor-sized numbers with product-sized numbers.
         if (random.nextBoolean()) return 2 + random.nextInt(d.factorMax - 1);
-        int hi = Math.max(target + target / 2, d.factorMax * 2);
+        int hi = Math.min(Math.max(target + target / 2, d.factorMax * 2), d.productMax);
         return 2 + random.nextInt(hi - 1);
     }
 
@@ -150,6 +184,13 @@ public final class PuzzleGenerator {
         for (int n = 4; n <= d.productMax; n++) {
             if (!factorPairs(n, d.factorMax).isEmpty()) pool.add(n);
         }
+        return pool;
+    }
+
+    /** Numbers that can be the special number of an addition group. */
+    static List<Integer> sumPool(Difficulty d) {
+        List<Integer> pool = new ArrayList<>();
+        for (int n = 3; n <= d.sumMax; n++) pool.add(n);
         return pool;
     }
 

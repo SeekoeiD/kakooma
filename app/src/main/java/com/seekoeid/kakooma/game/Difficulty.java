@@ -2,6 +2,7 @@ package com.seekoeid.kakooma.game;
 
 public enum Difficulty {
     //        label     groups size sumMax factorMax productMax
+    BEGINNER("Beginner", 3,     4,   10,    5,        25),
     EASY   ("Easy",     3,     4,   20,    10,       100),
     MEDIUM ("Medium",   4,     5,   50,    12,       150),
     HARD   ("Hard",     4,     6,   100,   15,       250),
@@ -35,6 +36,8 @@ public enum Difficulty {
         if (mode == Mode.MIXED) range = sums + ", " + products;
         else if (mode.op.product) range = products;
         else range = sums;
-        return groups + " flowers of " + groupSize + " · " + range;
+        String text = groups + " flowers of " + groupSize + " · " + range;
+        if (mode.op != null && !PuzzleGenerator.hasFinal(mode.op, this)) text += " \u00b7 no final flower";
+        return text;
     }
 }

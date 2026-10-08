@@ -68,6 +68,11 @@ public class PuzzleView extends View {
         return puzzle.outer.size();
     }
 
+    /** Index of the last drawable group: the final group, or the last outer one if there is none. */
+    private int lastIndex() {
+        return puzzle.hasFinal() ? finalIndex() : finalIndex() - 1;
+    }
+
     private Group group(int i) {
         return i == finalIndex() ? puzzle.center : puzzle.outer.get(i);
     }
@@ -79,13 +84,13 @@ public class PuzzleView extends View {
 
     /** True once every outer flower is solved and the final one is still open. */
     public boolean isFinalOpen() {
-        return puzzle != null && outerDone() && !solved[finalIndex()];
+        return puzzle != null && puzzle.hasFinal() && outerDone() && !solved[finalIndex()];
     }
 
     /** Highlights the special number of the first unsolved flower. Returns false if none. */
     public boolean showHint() {
         if (puzzle == null) return false;
-        for (int i = 0; i <= finalIndex(); i++) {
+        for (int i = 0; i <= lastIndex(); i++) {
             if (!solved[i]) {
                 hintGroup = i;
                 invalidate();
@@ -104,7 +109,10 @@ public class PuzzleView extends View {
         int n = finalIndex();
         float w = getWidth(), h = getHeight();
         int rows = (n + 1) / 2;
-        float cell = Math.min(w / 2f, h / (rows + 1.2f));
+        boolean hasFinal = puzzle.hasFinal();
+        float cell = Math.min(w / 2f, h / (hasFinal ? rows + 1.2f : rows));
+        // Without a final flower, centre the grid vertically.
+        float gridTop = hasFinal ? 0 : (h - rows * cell) / 2f;
         cx = new float[n + 1];
         cy = new float[n + 1];
         size = new float[n + 1];
@@ -113,7 +121,7 @@ public class PuzzleView extends View {
             boolean alone = (i == n - 1) && (n % 2 == 1);
             float left = alone ? (w - cell) / 2f : (w - 2 * cell) / 2f + col * cell;
             cx[i] = left + cell / 2f;
-            cy[i] = row * cell + cell * 0.45f;
+            cy[i] = gridTop + row * cell + cell * 0.45f;
             size[i] = cell;
         }
         float top = rows * cell;
@@ -130,7 +138,7 @@ public class PuzzleView extends View {
         if (cx == null) layout();
         boolean animating = false;
         long now = SystemClock.uptimeMillis();
-        for (int i = 0; i <= finalIndex(); i++) {
+        for (int i = 0; i <= lastIndex(); i++) {
             animating |= drawGroup(canvas, i, now);
         }
         if (animating) postInvalidateOnAnimation();
@@ -269,7 +277,7 @@ public class PuzzleView extends View {
         }
         if (cx == null) layout();
         float x = e.getX(), y = e.getY();
-        for (int gi = 0; gi <= finalIndex(); gi++) {
+        for (int gi = 0; gi <= lastIndex(); gi++) {
             Group g = group(gi);
             int count = g.numbers.length;
             float ring = ringRadius(gi), r = bubbleRadius(gi);
@@ -305,7 +313,8 @@ public class PuzzleView extends View {
             solvedAt[gi] = SystemClock.uptimeMillis();
             if (hintGroup == gi) hintGroup = -1;
             invalidate();
-            if (listener != null) listener.onCorrect(gi == finalIndex());
+            boolean complete = puzzle.hasFinal() ? gi == finalIndex() : outerDone();
+            if (listener != null) listener.onCorrect(complete);
         } else {
             wrongGroup = gi;
             wrongIndex = k;

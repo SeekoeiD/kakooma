@@ -162,7 +162,9 @@ public class MainActivity extends Activity {
                         + "at the bottom. When all flowers are solved, find the special number of the final flower "
                         + "to finish the puzzle.\n\n"
                         + "Wrong taps add 5 seconds and hints add 15 seconds. Higher levels use bigger numbers "
-                        + "and more numbers per flower. In Mixed mode every flower can use a different operation.")
+                        + "and more numbers per flower. In Mixed mode every flower can use a different operation.\n\n"
+                        + "Beginner multiplication and division have no final flower, because the numbers are "
+                        + "too small to make one.")
                 .setPositiveButton("Got it", null)
                 .show();
     }

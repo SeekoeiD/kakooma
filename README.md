@@ -21,6 +21,7 @@ solve that to finish the puzzle.
 
 | Level | Flowers | Numbers per flower | + / − numbers up to | × / ÷ factors up to |
 | --- | --- | --- | --- | --- |
+| Beginner | 3 | 4 | 10 | 5 (no final flower) |
 | Easy | 3 | 4 | 20 | 10 |
 | Medium | 4 | 5 | 50 | 12 |
 | Hard | 4 | 6 | 100 | 15 |
