@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+def buildNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+
+android {
+    namespace 'com.seekoeid.kakooma'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.seekoeid.kakooma'
+        minSdk 26
+        targetSdk 35
+        versionCode buildNumber
+        versionName "1.0.${buildNumber}"
+    }
+
+    signingConfigs {
+        release {
+            // A dedicated signing key is committed so every release build is
+            // signed the same way and installs over the previous one. Override
+            // with environment variables to sign with a private key instead.
+            storeFile file(System.getenv('KAKOOMA_KEYSTORE') ?: 'kakooma-release.jks')
+            storePassword System.getenv('KAKOOMA_KEYSTORE_PASSWORD') ?: 'kakooma'
+            keyAlias System.getenv('KAKOOMA_KEY_ALIAS') ?: 'kakooma'
+            keyPassword System.getenv('KAKOOMA_KEY_PASSWORD') ?: 'kakooma'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}
